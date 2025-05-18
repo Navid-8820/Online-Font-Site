@@ -1,0 +1,98 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>تبدیل فونت آنلاین</title>
+    <meta name="description" content="ابزاری آنلاین برای تست و اعمال فونت‌های فارسی و لاتین با فرمت‌های eot, ttf, woff, woff2">
+    <meta name="keywords" content="فونت فارسی, تست فونت, ابزار فونت آنلاین, تبدیل فونت">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body dir="rtl">
+    <div class="container">
+        <div class="upload-box">
+            <label for="fontUpload" class="upload-label">
+                <span>فونت‌ها را اینجا آپلود کنید</span>
+                <small>(فرمت‌های .eot، .ttf، .woff، .woff2 پشتیبانی می‌شوند)</small>
+            </label>
+            <input type="file" id="fontUpload" accept=".eot,.ttf,.woff,.woff2" multiple>
+        </div>
+
+        <div class="font-list">
+            <h2>فونت‌ها</h2>
+            <ul id="fontList"></ul>
+        </div>
+
+        <div class="text-preview">
+            <h2>پیش‌نمایش</h2>
+            <textarea id="previewText" placeholder="اینجا متن خود را وارد کنید"></textarea>
+            <div class="sample-texts">
+                <h3>فونت اعمال‌شده</h3>
+                <p id="userText"></p>
+                <p id="sampleFa">این یک متن تستی است</p>
+                <p id="sampleEn">This is a test text</p>
+                <p id="sampleNum">۱۲۳۴۵۶۷۸۹۰</p>
+            </div>
+            <div class="applied-font-box">
+                <span id="appliedFontName"></span>
+                <div id="copyMessage" class="copy-message">کپی شد</div>
+            </div>
+        </div>
+    </div>
+    <div class="buttons">
+        <button id="clearFont">پاک</button>
+    </div>
+    <footer>
+        طراحی شده توسط 
+        <a href="https://github.com/Navid-8820" target="_blank">
+            <svg class="github-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            Navid
+        </a>
+    </footer>
+
+    <script src="xlsx.full.min.js"></script>
+    <script src="xlsx-processor.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
